@@ -1,0 +1,53 @@
+description: Pipeline for parsing ProxySQL error logs
+processors:
+- set:
+    field: event.ingested
+    value: '{{_ingest.timestamp}}'
+- grok:
+    field: message
+    patterns:
+    - '%{PSSQLDATETIME}%{SPACE}%{DATA}%{SPACE}:%{SPACE}\[%{LOGLEVEL:log.level}\]%{SPACE}%{GREEDYDATA:message}'
+    ignore_missing: true
+    pattern_definitions:
+      LOCALDATETIME: (?:%{YEAR}-%{MONTHNUM}-%{MONTHDAY}|%{NUMBER})%{SPACE}%{TIME}
+      PSSQLDATETIME: (?:%{LOCALDATETIME:_tmp.local_timestamp})
+- rename:
+    field: '@timestamp'
+    target_field: event.created
+- date:
+    if: ctx._tmp?.local_timestamp != null && ctx.event?.timezone == null
+    field: _tmp.local_timestamp
+    formats:
+    - yyMMdd H:m:s
+    - yyMMdd  H:m:s
+    - yyyy-MM-dd H:m:s
+    - yyyy-MM-dd  H:m:s
+- date:
+    if: ctx._tmp?.local_timestamp != null && ctx.event?.timezone != null
+    field: _tmp.local_timestamp
+    timezone: '{{ event.timezone }}'
+    formats:
+    - yyMMdd H:m:s
+    - yyMMdd  H:m:s
+    - yyyy-MM-dd H:m:s
+    - yyyy-MM-dd  H:m:s
+- remove:
+    field: _tmp
+    ignore_missing: true
+- set:
+    field: event.kind
+    value: event
+- append:
+    field: event.category
+    value: database
+- append:
+    field: event.type
+    value: info
+- append:
+    field: event.type
+    value: error
+    if: "ctx?.log?.level != null && ctx.log.level.toLowerCase() == 'error'"
+on_failure:
+- set:
+    field: error.message
+    value: '{{ _ingest.on_failure_message }}'

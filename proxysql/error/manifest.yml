@@ -1,0 +1,9 @@
+module_version: "1.0"
+
+var:
+  - name: paths
+    default:
+      - /var/lib/proxysql/proxysql.log
+
+ingest_pipeline: ingest/pipeline.yml
+input: config/error.yml
