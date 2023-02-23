@@ -4,7 +4,7 @@ paths:
  - {{$path}}
 {{ end }}
 exclude_files: [".gz$"]
-exclude_lines: ['.*\[INFO\].*', '.*Closing unhealthy client connection.*']
+#exclude_lines: ['.*\[INFO\].*', '.*Closing unhealthy client connection.*']
 multiline:
   # Consider lines without timestamp part of the previous message
   pattern: '^([0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{6})'
